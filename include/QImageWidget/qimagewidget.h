@@ -20,28 +20,13 @@ public:
   bool fitToWidget() const;
   void setFitToWidget(bool on);
 
-  void normalSize();
-  void zoom(double factor);
+  void zoom(double factor, bool animated = false);
   void reset(bool animated = false);
+
   void setImage(const QImage &image);
   QImage image() const;
 
-private:
-  void adjustScrollBar(QScrollBar *scrollBar, double factor);
-  void scaleImage(double factor, bool animated = false);
-
-  QImageWidgetPrivate *d;
-
-  double m_rotationAngle;
-
-protected:
-  void resizeEvent(QResizeEvent *event);
-  bool handleNativeGestureEvents(QNativeGestureEvent *gesture);
-  bool handleWheelEvents(QWheelEvent *wheel);
-  // QObject interface
 public:
-  bool event(QEvent *event);
-
   // QWidget interface
   double scaleFactor() const;
 
@@ -59,8 +44,14 @@ signals:
 
 protected:
   void paintEvent(QPaintEvent *event);
-
-  // QWidget interface
-protected:
   void mouseDoubleClickEvent(QMouseEvent *event);
+  void resizeEvent(QResizeEvent *event);
+  bool handleNativeGestureEvents(QNativeGestureEvent *gesture);
+  bool handleWheelEvents(QWheelEvent *wheel);
+  bool event(QEvent *event);
+
+private:
+  // void adjustScrollBar(QScrollBar *scrollBar, double factor);
+  void scaleImage(double factor, bool animated = false);
+  QImageWidgetPrivate *d;
 };

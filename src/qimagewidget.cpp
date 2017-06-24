@@ -35,12 +35,9 @@ void QImageWidget::setFitToWidget(bool on) {
   d->fitToWidget = on;
 }
 
-void QImageWidget::normalSize() {
-  // d->imageWidget->adjustSize();
-  d->scaleFactor = 1.0;
+void QImageWidget::zoom(double factor, bool animated) {
+  scaleImage(factor, animated);
 }
-
-void QImageWidget::zoom(double factor) { scaleImage(factor); }
 
 void QImageWidget::reset(bool animated) {
   if (d->image.isNull())
@@ -82,13 +79,6 @@ void QImageWidget::reset(bool animated) {
     d->scaleFactor = scale;
     update();
   }
-  /*d->rotationAngle = 0;
-  if (iw > w || ih > h) {
-    iw = w / iw;
-    ih = h / ih;
-    d->scaleFactor = std::min(iw, ih) - 0.02;
-    update();
-  }*/
 }
 
 void QImageWidget::setImage(const QImage &image) {
@@ -98,10 +88,10 @@ void QImageWidget::setImage(const QImage &image) {
 
 QImage QImageWidget::image() const { return d->image; }
 
-void QImageWidget::adjustScrollBar(QScrollBar *scrollBar, double factor) {
+/*void QImageWidget::adjustScrollBar(QScrollBar *scrollBar, double factor) {
   scrollBar->setValue(int(factor * scrollBar->value() +
                           ((factor - 1) * scrollBar->pageStep() / 2)));
-}
+}*/
 
 void QImageWidget::scaleImage(double factor, bool animated) {
   Q_ASSERT(!d->image.isNull());
@@ -240,10 +230,9 @@ bool QImageWidget::event(QEvent *event) {
 
 double QImageWidget::scaleFactor() const { return d->scaleFactor; }
 
-double QImageWidget::rotationAngle() const { return m_rotationAngle; }
+double QImageWidget::rotationAngle() const { return d->rotationAngle; }
 
 void QImageWidget::setScaleFactor(double scaleFactor) {
-  // qWarning("Floating point comparison needs context sanity check");
   if (qFuzzyCompare(d->scaleFactor, scaleFactor))
     return;
 
@@ -253,7 +242,6 @@ void QImageWidget::setScaleFactor(double scaleFactor) {
 }
 
 void QImageWidget::setRotationAngle(double rotationAngle) {
-  // qWarning("Floating point comparison needs context sanity check");
   if (qFuzzyCompare(d->rotationAngle, rotationAngle))
     return;
 
