@@ -22,13 +22,13 @@ public:
 
   void normalSize();
   void zoom(double factor);
-  void reset();
+  void reset(bool animated = false);
   void setImage(const QImage &image);
   QImage image() const;
 
 private:
   void adjustScrollBar(QScrollBar *scrollBar, double factor);
-  void scaleImage(double factory);
+  void scaleImage(double factor, bool animated = false);
 
   QImageWidgetPrivate *d;
 

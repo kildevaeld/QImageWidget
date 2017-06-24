@@ -1,4 +1,5 @@
 build/
 .DS_Store
-*.user.txt
+*.txt.user*
 .vscode/
+*.autosave

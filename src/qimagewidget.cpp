@@ -4,11 +4,12 @@
 #include <QImageWidget/qimagewidget.h>
 #include <QLabel>
 #include <QPainter>
+#include <QParallelAnimationGroup>
 #include <QPropertyAnimation>
 #include <QScrollArea>
 #include <QScrollBar>
 #include <QTouchEvent>
-#include <stdlib.h> /* abs */
+#include <stdlib.h>
 
 class QImageWidgetPrivate {
 
@@ -41,7 +42,7 @@ void QImageWidget::normalSize() {
 
 void QImageWidget::zoom(double factor) { scaleImage(factor); }
 
-void QImageWidget::reset() {
+void QImageWidget::reset(bool animated) {
   if (d->image.isNull())
     return;
 
@@ -49,13 +50,45 @@ void QImageWidget::reset() {
   auto h = size().height();
   double iw = d->image.width();
   double ih = d->image.height();
-  d->rotationAngle = 0;
+
+  double scale = 1.0;
+
+  if (iw > w || ih > h) {
+    iw = w / iw;
+    ih = h / ih;
+    scale = std::min(iw, ih) - 0.02;
+  }
+
+  if (animated) {
+    QAnimationGroup *group = new QParallelAnimationGroup();
+    if (d->rotationAngle != 0) {
+      QPropertyAnimation *a = new QPropertyAnimation(this, "rotationAngle");
+      a->setStartValue(d->rotationAngle);
+      a->setEndValue(0);
+      group->addAnimation(a);
+    }
+
+    QPropertyAnimation *a = new QPropertyAnimation(this, "scaleFactor");
+    a->setStartValue(d->scaleFactor);
+    a->setEndValue(scale);
+    group->addAnimation(a);
+
+    connect(group, &QAnimationGroup::finished, group,
+            &QAnimationGroup::deleteLater);
+
+    group->start();
+  } else {
+    d->rotationAngle = 0;
+    d->scaleFactor = scale;
+    update();
+  }
+  /*d->rotationAngle = 0;
   if (iw > w || ih > h) {
     iw = w / iw;
     ih = h / ih;
     d->scaleFactor = std::min(iw, ih) - 0.02;
     update();
-  }
+  }*/
 }
 
 void QImageWidget::setImage(const QImage &image) {
@@ -70,8 +103,23 @@ void QImageWidget::adjustScrollBar(QScrollBar *scrollBar, double factor) {
                           ((factor - 1) * scrollBar->pageStep() / 2)));
 }
 
-void QImageWidget::scaleImage(double factor) {
-  // Q_ASSERT(d->imageWidget->pixmap());
+void QImageWidget::scaleImage(double factor, bool animated) {
+  Q_ASSERT(!d->image.isNull());
+
+  if (animated) {
+    QPropertyAnimation *a = new QPropertyAnimation(this, "scaleFactor");
+    a->setStartValue(d->scaleFactor);
+    a->setEndValue(d->scaleFactor + factor);
+
+    connect(a, &QPropertyAnimation::finished, a,
+            &QPropertyAnimation::deleteLater);
+
+    a->start();
+
+  } else {
+    d->scaleFactor = factor;
+    update();
+  }
   // d->scaleFactor *= factor;
   // d->imageWidget->resize(d->scaleFactor * d->imageWidget->pixmap()->size());
 
@@ -85,8 +133,6 @@ void QImageWidget::resizeEvent(QResizeEvent *event) {
 
   if (d->fitToWidget)
     this->reset();
-
-  // d->scroll->setGeometry(0, 0, g.width(), g.height());
 }
 
 bool QImageWidget::handleNativeGestureEvents(QNativeGestureEvent *gesture) {
@@ -113,26 +159,12 @@ bool QImageWidget::handleNativeGestureEvents(QNativeGestureEvent *gesture) {
     connect(a, &QPropertyAnimation::finished, a,
             &QPropertyAnimation::deleteLater);
     a->start();
-  }; break;
+  };
+    return true;
   default:
     return false;
   }
 
-  /*if (gesture->gestureType() == Qt::ZoomNativeGesture) {
-
-    auto value = gesture->value();
-
-    d->scaleFactor += value;
-    if (d->scaleFactor <= 0.05) {
-      d->scaleFactor = 0.05;
-    } else if (d->scaleFactor >= 4.0) {
-      d->scaleFactor = 4.0;
-    }
-  } else if (gesture->gestureType() == Qt::RotateNativeGesture) {
-    d->rotationAngle += gesture->value();
-  } else if (gesture->gestureType() == Qt::SmartZoomNativeGesture) {
-    d->scaleFactor += gesture->value();
-  }*/
   this->update();
   return true;
 }
@@ -248,4 +280,4 @@ void QImageWidget::paintEvent(QPaintEvent *event) {
   p.drawImage(0, 0, currentImage);
 }
 
-void QImageWidget::mouseDoubleClickEvent(QMouseEvent *event) { reset(); }
+void QImageWidget::mouseDoubleClickEvent(QMouseEvent *event) { reset(true); }
