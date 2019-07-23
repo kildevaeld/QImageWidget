@@ -11,6 +11,7 @@ class QImageWidget : public QWidget {
 
 public:
   explicit QImageWidget(QWidget *parent = 0);
+  ~QImageWidget();
 
   Q_PROPERTY(double scaleFactor READ scaleFactor WRITE setScaleFactor NOTIFY
                  scaleFactorChanged)

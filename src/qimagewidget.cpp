@@ -27,6 +27,8 @@ public:
 QImageWidget::QImageWidget(QWidget *parent)
     : QWidget(parent), d(new QImageWidgetPrivate) {}
 
+QImageWidget::~QImageWidget() { delete d; }
+
 bool QImageWidget::fitToWidget() const { return d->fitToWidget; }
 
 void QImageWidget::setFitToWidget(bool on) {
